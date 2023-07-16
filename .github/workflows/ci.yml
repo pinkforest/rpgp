@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - new-dalek
 
 env:
   RUST_BACKTRACE: 1
