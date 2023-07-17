@@ -28,10 +28,7 @@ jobs:
         submodules: recursive
 
     - name: Install ${{ matrix.rust }}
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        override: true
+      uses: dtolnay/rust-toolchain@${{ matrix.rust }}
 
     - name: check
       uses: actions-rs/cargo@v1
@@ -128,11 +125,10 @@ jobs:
         submodules: recursive
 
     - name: Install ${{ matrix.rust }}
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
-        target: ${{ matrix.target }}
-        override: true
+        targets: ${{ matrix.target }}
 
     - uses: msys2/setup-msys2@v2
     - name: check
@@ -232,14 +228,11 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install nightly
-      uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: nightly
-        override: true
-
-    - name: Install cross
-      run: cargo install cross
+        toolchain: ${{ matrix.rust }}
+        targets: ${{ matrix.target }}
+    - uses: RustCrypto/actions/cross-install@master
 
     - name: check
       run: cross check --all --target ${{ matrix.target }}
@@ -257,12 +250,11 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
-    - name: Install rust with wasm32-unknown-unknown
-      uses: actions-rs/toolchain@v1
+    - name: Install ${{ matrix.rust }}
+      uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
-        target: wasm32-unknown-unknown
-        override: true
+        targets: wasm32-unknown-unknown
 
     - name: Cache cargo registry
       uses: actions/cache@v2
@@ -282,17 +274,8 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
-    - uses: actions-rs/toolchain@v1
-      with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: rustfmt
-
-    - name: setup
-      run: |
-        rustup component add rustfmt
-        rustc --version
+    - name: Install ${{ matrix.rust }}
+      uses: dtolnay/rust-toolchain@nightly
 
     - name: fmt
       run: cargo fmt --all -- --check
@@ -304,13 +287,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - uses: actions-rs/toolchain@v1
-      with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: clippy
-    - uses: actions-rs/clippy-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        args: --all-features --all-targets
+    - name: Install ${{ matrix.rust }}
+      uses: dtolnay/rust-toolchain@nightly
+    - run: cargo clippy --all-features
