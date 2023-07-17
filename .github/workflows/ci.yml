@@ -19,21 +19,22 @@ jobs:
     strategy:
       matrix:
         include:
-          # TODO: Windows native msvc target broken
-          - os: windows-latest
-            target: [x86_64-pc-windows-gnu]
-          - os: ubuntu-latest
-            target: [x86_64-unknown-linux-gnu]
-          - os: macos-latest
-            target: [x86_64-apple-darwin, aarch64-apple-darwin]
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
 
-    steps:
+  steps:
     - name: Checkout
       uses: actions/checkout@master
       with:
         submodules: recursive
 
-    - name: Install ${{ matrix.rust }}
+    - name: Install Rust stable
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
@@ -48,12 +49,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            target: [x86_64-pc-windows-gnu]
-          - os: ubuntu-latest
-            target: [x86_64-unknown-linux-gnu]
-          - os: macos-latest
-            target: [x86_64-apple-darwin, aarch64-apple-darwin]
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
 
     steps:
     - name: Checkout
@@ -61,7 +64,7 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install ${{ matrix.rust }}
+    - name: Install Rust nightly
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: nightly
