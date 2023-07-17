@@ -18,59 +18,50 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        rust: [nightly,stable,beta]
         include:
           - target: x86_64-pc-windows-gnu
             os: windows-latest
+            exclude: wasm
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+            exclude: wasm
           - target: x86_64-apple-darwin
             os: macos-latest
+            exclude: wasm
           - target: aarch64-apple-darwin
             os: macos-latest
+            exclude: asm,wasm
+          - target: wasm32-unknown-unknown
+            os: linux-latest
+            exclude: asm
     steps:
     - name: Checkout
       uses: actions/checkout@master
       with:
         submodules: recursive
-
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
         targets: ${{ matrix.target }}
-
-    - run: cargo hack check --release --target ${{ matrix.target }} --each-feature --exclude-features asm
-    - run: cargo hack check --release --target ${{ matrix.target }} --all-features --bins --exclude-features asm
-
-  nightly_build_and_test:
-    name: Nightly build and test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-pc-windows-gnu
-            os: windows-latest
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@master
-      with:
-        submodules: recursive
-
-    - name: Install Rust nightly
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: nightly
-        targets: ${{ matrix.target }}
-
-    - run: cargo hack check --release --each-feature
-    - run: cargo hack check --release --all-features
+    - uses: taiki-e/install-action@cargo-hack
+    ############################################
+    # Non-nightly
+    - name: Each feature (non-nightly)
+      if: ${{ contains(matrix.rust, 'nightly') == false }}
+      run: cargo hack check --release --target ${{ matrix.target }} --each-feature --exclude-features nightly,asm,${{ matrix.exclude }}
+    - name: All features (non-nightly)
+      if: ${{ contains(matrix.rust, 'nightly') == false }}
+      run: cargo hack check --release --target ${{ matrix.target }} --all-features --exclude-features nightly,asm,${{ matrix.exclude }}
+    ############################################
+    # Nightly
+    - name: Each feature (nightly)
+      if: ${{ contains(matrix.rust, 'nightly') == false }}
+      run: cargo hack check --release --target ${{ matrix.target }} --each-feature --exclude-features ${{ matrix.exclude }}
+    - name: All features (nightly)
+      if: ${{ contains(matrix.rust, 'nightly') == false }}
+      run: cargo hack check --release --target ${{ matrix.target }} --all-features --exclude-features ${{ matrix.exclude }}
 
   bench:
     name: Benches compile
@@ -80,109 +71,6 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
     - name: Build default (host native) bench
       run: cargo build --benches
-
-#  build_and_test_windows:
-#    name: Build and test (Windows)
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        os: [windows-latest]
-#        rust: [nightly, beta, stable]
-#        target:
-#          - x86_64-pc-windows-gnu
-#          # FIXME
-#          # -  x86_64-pc-windows-msvc
-#
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@master
-#      with:
-#        submodules: recursive
-#
-#    - name: Install ${{ matrix.rust }}
-#      uses: dtolnay/rust-toolchain@master
-#      with:
-#        toolchain: ${{ matrix.rust }}
-#        targets: ${{ matrix.target }}
-#
-#    - uses: msys2/setup-msys2@v2
-#    - name: check
-#      uses: actions-rs/cargo@v1
-#      with:
-#        command: check
-#        args: --all --bins --tests --target ${{ matrix.target }}
-#
-#    - name: check nightly
-#      uses: actions-rs/cargo@v1
-#      if: matrix.rust == 'nightly'
-#      with:
-#        command:  check
-#        args: --features nightly --all --bins --examples --tests --target ${{ matrix.target }}
-#
-#    - name: check wasm
-#      uses: actions-rs/cargo@v1
-#      with:
-#        command:  check
-#        override: true
-#        args: --features wasm --all --bins --target wasm32-unknown-unknown
-#
-#    - name: check bench
-#      uses: actions-rs/cargo@v1
-#      if: matrix.rust == 'nightly'
-#      with:
-#        command:  check
-#        target: ${{ matrix.target }}
-#        args: --benches
-#
-#    - name: check asm
-#      uses: actions-rs/cargo@v1
-#      if: matrix.rust == 'nightly' && matrix.target == 'x86_64-pc-windows-gnu'
-#      with:
-#        command:  check
-#        args: --features asm  --target ${{ matrix.target }}
-#        
-#    - name: tests
-#      uses: actions-rs/cargo@v1
-#      with:
-#        command: test
-#        args: --all  --target ${{ matrix.target }}
-#
-#    - name: nightly
-#      uses: actions-rs/cargo@v1
-#      if: matrix.rust == 'nightly'
-#      with:
-#        command: test
-#        args: --all  --features nightly --target ${{ matrix.target }}
-#
-#    # FIXME
-#    # - name: asm
-#    #   uses: actions-rs/cargo@v1
-#    #   if: matrix.rust == 'nightly' && matrix.target == 'x86_64-pc-windows-gnu'
-#    #   with:
-#    #     command: test
-#    #     args: --all  --features asm --target ${{ matrix.target }}
-#
-#    - name: tests ignored
-#      uses: actions-rs/cargo@v1
-#      with:
-#        command: test
-#        args: --all  --target ${{ matrix.target }} --release -- --ignored
-#
-#    - name: nightly ignored
-#      uses: actions-rs/cargo@v1
-#      if: matrix.rust == 'nightly'
-#      with:
-#        command: test
-#        args: --all  --features nightly --target ${{ matrix.target }} --release -- --ignored
-#
-#    # FIXME
-#    # - name: asm ignored
-#    #   uses: actions-rs/cargo@v1
-#    #   if: matrix.rust == 'nightly' && matrix.target == 'x86_64-pc-windows-gnu'
-#    #   with:
-#    #     command: test
-#    #     args: --all  --features asm --target ${{ matrix.target }} --release -- --ignored
-
 
   cross:
     name: Cross compile
@@ -215,33 +103,33 @@ jobs:
     - name: test
       run: cross test --all --target ${{ matrix.target }}
 
-  check_wasm:
-    name: Check wasm targets
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust: [nightly, beta, stable]
-
-    steps:
-    - uses: actions/checkout@master
-
-    - name: Install ${{ matrix.rust }}
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: ${{ matrix.rust }}
-        targets: wasm32-unknown-unknown
-
-    - name: Cache cargo registry
-      uses: actions/cache@v2
-      with:
-        path: ~/.cargo/registry
-        key: wasm32-${{ matrix.rust }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
-
-    - name: check
-      uses: actions-rs/cargo@v1
-      with:
-        command: check
-        args: --target wasm32-unknown-unknown --features wasm
+#  check_wasm:
+#    name: Check wasm targets
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        rust: [nightly, beta, stable]
+#
+#    steps:
+#    - uses: actions/checkout@master
+#
+#    - name: Install ${{ matrix.rust }}
+#      uses: dtolnay/rust-toolchain@master
+#      with:
+#        toolchain: ${{ matrix.rust }}
+#        targets: wasm32-unknown-unknown
+#
+#    - name: Cache cargo registry
+#      uses: actions/cache@v2
+#      with:
+#        path: ~/.cargo/registry
+#        key: wasm32-${{ matrix.rust }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
+#
+#    - name: check
+#      uses: actions-rs/cargo@v1
+#      with:
+#        command: check
+#        args: --target wasm32-unknown-unknown --features wasm
 
   clippy:
     name: Check that clippy is happy
