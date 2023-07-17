@@ -271,29 +271,38 @@ jobs:
         command: check
         args: --target wasm32-unknown-unknown --features wasm
         
-  check_fmt_and_docs:
-    name: Checking fmt and docs
+  check_doc:
+    name: Checking docs
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
 
-    - name: Install ${{ matrix.rust }}
-      uses: dtolnay/rust-toolchain@nightly
-      with:
-        components: clippy, rustfmt
-
-    - name: fmt
-      run: cargo fmt --all -- --check
+    - name: Install stable
+      uses: dtolnay/rust-toolchain@stable
 
     - name: Docs
       run: cargo doc
+
+  check_fmt:
+    name: Checking fmt
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Install stable
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
+
+    - name: fmt
+      run: cargo fmt --all -- --check
 
   clippy_check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Install ${{ matrix.rust }}
-      uses: dtolnay/rust-toolchain@nightly
+    - name: Install stable
+      uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy
     - run: cargo clippy --all-features
