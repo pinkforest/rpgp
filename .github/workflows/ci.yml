@@ -18,7 +18,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: [nightly, beta, stable]
         include:
           # TODO: Windows native msvc target broken
           - os: windows-latest
@@ -48,7 +47,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: [nightly, beta, stable]
         include:
           - os: windows-latest
             target: [x86_64-pc-windows-gnu]
@@ -242,41 +240,33 @@ jobs:
       with:
         command: check
         args: --target wasm32-unknown-unknown --features wasm
-        
-  check_doc:
-    name: Checking docs
+
+  clippy:
+    name: Check that clippy is happy
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-
-    - name: Install stable
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Docs
-      run: cargo doc
-
-  check_fmt:
-    name: Checking fmt
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-
-    - name: Install stable
-      uses: dtolnay/rust-toolchain@master
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@nightly
       with:
-        toolchain: stable
-        components: rustfmt
-
-    - name: fmt
-      run: cargo fmt --all -- --check
-
-  check_clippy:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - name: Install stable
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: stable
         components: clippy
-    - run: cargo clippy --all-features
+    - run: cargo clippy --target x86_64-unknown-linux-gnu
+
+  rustfmt:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
+    - run: cargo fmt --all -- --check
+
+  doc:
+    name: Check docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - run: cargo doc --all-features
