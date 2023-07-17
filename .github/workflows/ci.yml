@@ -28,7 +28,10 @@ jobs:
         submodules: recursive
 
     - name: Install ${{ matrix.rust }}
-      uses: dtolnay/rust-toolchain@${{ matrix.rust }}
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        targets: ${{ matrix.target }}
 
     - name: check
       uses: actions-rs/cargo@v1
