@@ -279,6 +279,8 @@ jobs:
 
     - name: Install ${{ matrix.rust }}
       uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: clippy
 
     - name: fmt
       run: cargo fmt --all -- --check
@@ -292,4 +294,6 @@ jobs:
     - uses: actions/checkout@master
     - name: Install ${{ matrix.rust }}
       uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: clippy
     - run: cargo clippy --all-features
