@@ -290,19 +290,21 @@ jobs:
     - uses: actions/checkout@master
 
     - name: Install stable
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: stable
         components: rustfmt
 
     - name: fmt
       run: cargo fmt --all -- --check
 
-  clippy_check:
+  check_clippy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
     - name: Install stable
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: stable
         components: clippy
     - run: cargo clippy --all-features
