@@ -13,8 +13,8 @@ env:
 
 
 jobs:
-  stable_build_and_test:
-    name: Stable build and test
+  test:
+    name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
